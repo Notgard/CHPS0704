@@ -1,0 +1,16 @@
+#version 430
+
+in vec3 pos;
+in vec3 norm;
+in vec3 uvs;
+
+out vec2 textureCoordV;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
+
+void main() {
+	textureCoordV = vec2(uvs.xy);
+	gl_Position = proj * view * model * vec4(pos, 1.0);
+}
