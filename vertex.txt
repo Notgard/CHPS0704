@@ -1,0 +1,9 @@
+#version 430
+
+in vec2 textureCoord;
+out vec2 textureCoordV;
+
+void main(void) {
+	textureCoordV = textureCoord;
+	gl_Position = ...;
+}
