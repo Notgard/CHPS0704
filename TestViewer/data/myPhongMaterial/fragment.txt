@@ -1,0 +1,42 @@
+uniform vec4 lightAmbiant;
+uniform vec4 lightDiffuse;
+uniform vec3 cameraPosition;
+uniform float lightSpecPower;
+uniform vec4 lightColor;
+uniform vec3 lightPos;
+
+in vec3 fnorm;
+in vec3 fpos;
+
+
+vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos, float specPower, vec4 ambiant, vec4 diffuse )
+{
+    vec3 normal = normalize(fnorm);
+
+    //Diffus
+    vec3 lightDir = normalize(light - fpos);
+    float lambertian = max(dot(lightDir,normal), 0.0);
+    float specular = 0.0;
+
+    //Spec
+    vec3 reflectDir = normalize(reflect(-lightDir, normal));
+    vec3 viewDir = normalize(camPos-fpos);
+    float specAngle = max(dot(reflectDir, viewDir), 0.0);
+    specular = pow(specAngle, specPower);
+
+    vec4 res = ambiant+lambertian*diffuse*lightcol+specular*lightcol;
+    return  res;
+    //vec4(abs(10.0*fpos),1.0);
+
+}
+
+
+void main()
+{
+    vec3 light    = lightPos;
+    vec4 lightcol = lightColor;
+    vec3 normal = normalize(fnorm);
+    gl_FragColor = computePhong(  lightPos, lightColor,
+                                  fpos, normalize(fnorm),
+                                  cameraPosition, lightSpecPower, lightAmbiant, lightDiffuse );
+}

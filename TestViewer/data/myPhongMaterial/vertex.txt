@@ -4,12 +4,15 @@ in vec3 pos;
 in vec3 proj;
 in vec3 uvs;
 
-out vec3 light_direction;
+out vec3 fpos;
+out vec3 fnorm;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
 void main(void) {
+	fpos = vec3(pos);
+	fnorm = vec3(norm);
 	gl_fragCoord = proj * view * model * vec4(pos, 1.0);
 }
