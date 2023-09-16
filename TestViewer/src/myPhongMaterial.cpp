@@ -14,7 +14,7 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
     this->bindSpecific(c);
     this->bindMatrix(c, mesh->getModelMatrix());
 
-    this->m_program->setUniformValue("lightAmbiante", this->getAmbiant());
+    this->m_program->setUniformValue("lightAmbiant", this->getAmbiant());
     this->m_program->setUniformValue("lightDiffuse", this->getDiffuse());
     this->m_program->setUniformValue("lightSpecPow", this->getSpecPower());
 
