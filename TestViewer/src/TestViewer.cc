@@ -2,9 +2,10 @@
 
 
 #include "ColorMaterial.h"
-//custom color material
+
 #include "myColorMaterial.h"
 #include "myTextureMaterial.h"
+#include "myPhongMaterial.h"
 
 #include "TextureMaterial.h"
 #include "GridMaterial.h"
@@ -18,9 +19,11 @@ TestViewer::~TestViewer()
 void TestViewer::resizeGL(int width, int height)
 {
     QGLShaderViewer::resizeGL(width, height);
+    this->m_framebuffer->resize(width, height);
 }
 void  TestViewer::init               ()
 {
+    this->m_framebuffer = new FBO(this->width(), this->height(), GL_RGB8);
     getCamera()->setNearAndFar( 0.01, 100 );
     getCamera()->setView(QVector3D(0,0.2,4), QVector3D(0,1,0), QVector3D(0,0,0) );
 
@@ -28,9 +31,14 @@ void  TestViewer::init               ()
 }
 void  TestViewer::createSceneEntities()
 {
-    addGeometry( "lapin", new Geometry(":/3d/Bunny.obj") );
-    addGeometry( "sol",   new Geometry(":/3d/sol.obj") );
+    addMaterial("fbo", new myTextureMaterial(this->m_framebuffer) );
     addGeometry( "cube",  new Geometry(":/3d/cube.obj") );
+    addGeometry( "lapin", new Geometry(":/3d/Bunny.obj") );
+
+
+
+    addGeometry( "sol",   new Geometry(":/3d/sol.obj") );
+
     addGeometry( "quad",  new Geometry(":/3d/quad.obj") );
 
     addMaterial( "jaune", new ColorMaterial(QVector4D(1.0f,1.f,0.f,1.0f)) );
@@ -41,9 +49,12 @@ void  TestViewer::createSceneEntities()
 
     //addMaterial( "sol",   new TextureMaterial(QString(":/textures/sol.jpg")) );
 
-    addMaterial("sol", new myTextureMaterial(QString(":/textures/sol.jpg")) );
+    //addMaterial("sol", new myTextureMaterial(QString(":/textures/sol.jpg")) );
 
     addMaterial( "phong", new PhongMaterial( QVector4D(0.1f,0.1f,0.1f,1.f),
+                                             QVector4D(0.1f,0.9f,0.4f,1.f), 128) );
+
+    addMaterial( "myphong", new myPhongMaterial( QVector4D(0.1f,0.1f,0.1f,1.f),
                                              QVector4D(0.1f,0.9f,0.4f,1.f), 128) );
 
     addMaterial( "lapinBlanc",    new TextureMaterial(QString(":/textures/bunny2.jpg")) );
@@ -53,7 +64,7 @@ void  TestViewer::createSceneEntities()
     Mesh *  mesh;
 
     // lapin éclairé
-    mesh = new Mesh( getGeometry("lapin"), getMaterial("sol") );
+    mesh = new Mesh( getGeometry("lapin"), getMaterial("blue") );
     addEntityInScene("LapinJaune", mesh );
     //mesh->translate(QVector3D(0,0,-2));
     mesh->translate(QVector3D(0,1,1));
@@ -83,7 +94,7 @@ void  TestViewer::createSceneEntities()
 
        m_lights.push_back( PointLight( getCamera()->getPosition() + getCamera()->getRightDir()*4.f, Qt::white ) );
 
-
+    this->m_cube = new Mesh(this->getGeometry("sol"), this->getMaterial("fbo"));
 }
 
 
@@ -129,13 +140,24 @@ void  TestViewer::drawScene          ()
 // rendu monoscopic
 void TestViewer::drawMono()
 {
-    // Creation de la vue mono
+    if(!pause) {
+        // Creation de la vue mono
+        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //foreach( Mesh * entity, getListEntityInScene() )
+        //{
+        //    entity->render( getCamera(), m_lights );
+        //}
+        this->m_framebuffer->bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         foreach( Mesh * entity, getListEntityInScene() )
         {
             entity->render( getCamera(), m_lights );
         }
+        this->m_framebuffer->release();
+        this->m_cube->render(this->getCamera(), m_lights, this->getMaterial("fbo"));
+    }
 }
 
 

@@ -2,13 +2,15 @@
 #define MYPHONGMATERIAL_H
 
 #include "Material.h"
+
+#include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
+#include <QVector3D>
 #include <QVector4D>
 #include <QColor>
-
 class myPhongMaterial : public Material {
 public:
-    myPhongMaterial( const QVector4D &ambient, const QVector4D &diffuse, const float &f );
-    myPhongMaterial( const QColor    &ambient, const QColor    &diffuse, const float &f );
+    myPhongMaterial(QVector4D const &ambient, QVector4D const &diffuse, float const &f );
 
     QVector4D    getAmbiant() const;
     void         setAmbiant(const QVector4D &getAmbiant);
@@ -20,8 +22,7 @@ public:
     void         setSpecpower(float getSpecPower);
 
     void         render(const Mesh * mesh, const QGLCamera *c, const QList<PointLight> & lights ) override;
-
-    //virtual void bindSpecific( const QGLCamera *c )  override;
+    virtual void bindSpecific( const QGLCamera *c )  override;
 
 private:
     QVector4D m_ambiant;

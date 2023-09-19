@@ -7,6 +7,8 @@
 #define TESTVIEWER_H
 
 #include "QGLShaderViewer.h"
+#include "Mesh.h"
+#include "FBO.h"
 
 
 /// ==============================================================
@@ -41,6 +43,8 @@ protected:
         virtual void drawMono  ();
 private:
         bool pause = false;
+        Mesh * m_cube;
+        FBO * m_framebuffer;
 };
 
 #endif // TESTVIEWER_H

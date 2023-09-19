@@ -1,14 +1,14 @@
 #include "myPhongMaterial.h"
 #include "Mesh.h"
 
-myPhongMaterial::myPhongMaterial( const QVector4D &ambient, const QVector4D &diffuse, const float &f ) {
+myPhongMaterial::myPhongMaterial(QVector4D const &ambient, QVector4D const &diffuse, float const &f ) {
     this->m_ambiant = ambient;
     this->m_diffuse = diffuse;
     this->m_specpower = f;
 }
  
 void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<PointLight> & lights ) {
-    this->gl->glEnable(GL_DEPTH_TEST);
+    this->gl->glEnable(GL_DEPTH_TEST); // why is this wrong?
     this->m_program->bind();
 
     this->bindSpecific(c);
@@ -21,9 +21,10 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
     this->m_program->setUniformValue("cameraPosition", c->getPosition());
 
     for(const PointLight &light : lights) {
-        this->m_program->setUniformValue("lightColor", light.getColor());
-        this->m_program->setUniformValue("lightPos", light.getPosition());
+        //
     }
+    this->m_program->setUniformValue("lightColor", lights[0].getColor());
+    this->m_program->setUniformValue("lightPos", lights[0].getPosition());
 
     mesh->getGeometry()->binds(this->attribPos, this->attribNorm, this->attribUvs, this->attribTangents);
     mesh->getGeometry()->draw();
@@ -52,4 +53,8 @@ float        myPhongMaterial::getSpecPower() const {
 
 void         myPhongMaterial::setSpecpower(float getSpecPower) {
     this->m_specpower = getSpecPower;
+}
+
+void myPhongMaterial::bindSpecific( const QGLCamera *c )  {
+    Q_UNUSED(c);
 }

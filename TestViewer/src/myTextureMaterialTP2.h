@@ -1,10 +1,8 @@
-#ifndef MYTEXTUREMATERIAL_H
-#define MYTEXTUREMATERIAL_H
+#ifndef myTextureMaterialTP2TP2_H
+#define myTextureMaterialTP2TP2_H
 
 #include "Material.h"
 #include "glTexture.h"
-
-#include <FBO.h>
 
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -12,19 +10,17 @@
 #include <QVector4D>
 #include <QString>
 
-class myTextureMaterial : public Material
+class myTextureMaterialTP2 : public Material
 {
 public:
-    myTextureMaterial( glTexture * texture);
-    myTextureMaterial( const QString & texturename);
-    myTextureMaterial(FBO * framebuffer);
+    myTextureMaterialTP2( glTexture * texture);
+    myTextureMaterialTP2( const QString & texturename);
 
     virtual void bindSpecific( const QGLCamera *c )  override;
 
 private:
     glTexture            * m_texture;
-    FBO                  * m_fbuffer;
     bool                   m_externTexture = false;
 };
 
-#endif // MYTEXTUREMATERIAL_H
+#endif // myTextureMaterialTP2TP2_H

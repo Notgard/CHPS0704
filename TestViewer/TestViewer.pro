@@ -26,14 +26,18 @@ INCLUDEPATH += $$PWD/src
         src/TestViewer.cc \
         src/main.cpp \
     src/myColorMaterial.cpp \
+    src/myEffect.cpp \
     src/myPhongMaterial.cpp \
-    src/myTextureMaterial.cpp
+    src/myTextureMaterial.cpp \
+    src/myTextureMaterialTP2.cpp
 
     HEADERS += \
         src/TestViewer.h \
     src/myColorMaterial.h \
+    src/myEffect.h \
     src/myPhongMaterial.h \
-    src/myTextureMaterial.h
+    src/myTextureMaterial.h \
+    src/myTextureMaterialTP2.h
 
 
 
