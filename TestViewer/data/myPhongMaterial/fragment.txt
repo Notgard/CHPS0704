@@ -1,3 +1,5 @@
+#version 430
+
 uniform vec4 lightAmbiant;
 uniform vec4 lightDiffuse;
 uniform float lightSpecPow;
@@ -5,8 +7,8 @@ uniform vec3 cameraPosition;
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 
-//in vec3 position;
-//in vec3 normal;
+in vec3 phong_pos;
+in vec3 phong_norm;
 
 vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos, float specPower, vec4 ambiant, vec4 diffuse )
 {
@@ -14,25 +16,34 @@ vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos,
 
     //Diffuse
     vec3 lightDir = normalize(light - pos);
-    float lambertian = max(dot(lightDir,normal), 0.0);
-    float specular = 0.0;
+	
+	//angle diffusion
+	float diffAngle = dot(lightDir,normal);
+    float lambertian = max(diffAngle, 0.0);
+	diffuse = diffuse * lambertian;
+	//diffuse = diffuse * diffAngle;
 
-    //Spec
-    vec3 reflectDir = normalize(reflect(-lightDir, normal));
-    vec3 viewDir = normalize(camPos-fpos);
+    //Speculaire
+    vec3 reflectDir = normalize(reflect(-lightDir, normal)); //R
+    vec3 viewDir = normalize(camPos-pos); //V
+	
+	//max(V . R, 0)^specPower
     float specAngle = max(dot(reflectDir, viewDir), 0.0);
-    specular = pow(specAngle, specPower);
+    float specular = pow(specAngle, specPower);
+	
+	//lumière ambiante et diffuse
+	vec4 amb_diff = ambiant*lightcol+diffuse*lightcol;
 
-    vec4 res = ambiant+lambertian*diffuse*lightcol+specular*lightcol;
+    vec4 res = amb_diff+specular;
     return  res;
 }
 
 
 void main()
 {
-    //vec3 light    = lightPos;
-    //vec4 lightcol = lightColor;
-    //vec3 norml = normalize(normal);
-    //gl_FragColor = computePhong(light, lightcol, position, norml, cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse);
-    gl_FragColor = vec4(1.0);
+	vec3 norml = normalize(phong_norm);
+    vec3 light    = lightPos;
+    vec4 lightcol = lightColor;
+	vec4 phong = computePhong(light, lightcol, phong_pos, norml, cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse);
+    gl_FragColor = phong * vec4(1., 0., 1., 0.);
 }

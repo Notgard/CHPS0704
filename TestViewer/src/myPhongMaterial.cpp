@@ -5,10 +5,12 @@ myPhongMaterial::myPhongMaterial(QVector4D const &ambient, QVector4D const &diff
     this->m_ambiant = ambient;
     this->m_diffuse = diffuse;
     this->m_specpower = f;
+    //initialiser les shaders
+    initShader(QString("./data/myPhongMaterial/"));
 }
  
 void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<PointLight> & lights ) {
-    this->gl->glEnable(GL_DEPTH_TEST); // why is this wrong?
+    this->gl->glEnable(GL_DEPTH_TEST);
     this->m_program->bind();
 
     this->bindSpecific(c);
@@ -21,10 +23,11 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
     this->m_program->setUniformValue("cameraPosition", c->getPosition());
 
     for(const PointLight &light : lights) {
-        //
+        this->m_program->setUniformValue("lightColor", light.getColor());
+        this->m_program->setUniformValue("lightPos", light.getPosition());
     }
-    this->m_program->setUniformValue("lightColor", lights[0].getColor());
-    this->m_program->setUniformValue("lightPos", lights[0].getPosition());
+    //this->m_program->setUniformValue("lightColor", lights[0].getColor());
+    //this->m_program->setUniformValue("lightPos", lights[0].getPosition());
 
     mesh->getGeometry()->binds(this->attribPos, this->attribNorm, this->attribUvs, this->attribTangents);
     mesh->getGeometry()->draw();

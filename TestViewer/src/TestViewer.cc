@@ -7,6 +7,8 @@
 #include "myTextureMaterial.h"
 #include "myPhongMaterial.h"
 
+#include "myTextureMaterialTP2.h"
+
 #include "TextureMaterial.h"
 #include "GridMaterial.h"
 #include "PhongMaterial.h"
@@ -31,16 +33,14 @@ void  TestViewer::init               ()
 }
 void  TestViewer::createSceneEntities()
 {
-    addMaterial("fbo", new myTextureMaterial(this->m_framebuffer) );
+
     addGeometry( "cube",  new Geometry(":/3d/cube.obj") );
     addGeometry( "lapin", new Geometry(":/3d/Bunny.obj") );
-
-
-
     addGeometry( "sol",   new Geometry(":/3d/sol.obj") );
-
     addGeometry( "quad",  new Geometry(":/3d/quad.obj") );
 
+    //Ajout du FBO comme texture à utiliser pour la geométrie
+    addMaterial("fbo", new myTextureMaterial(this->m_framebuffer) );
     addMaterial( "jaune", new ColorMaterial(QVector4D(1.0f,1.f,0.f,1.0f)) );
     addMaterial( "rouge", new ColorMaterial(Qt::red) );
 
@@ -49,7 +49,7 @@ void  TestViewer::createSceneEntities()
 
     //addMaterial( "sol",   new TextureMaterial(QString(":/textures/sol.jpg")) );
 
-    //addMaterial("sol", new myTextureMaterial(QString(":/textures/sol.jpg")) );
+    addMaterial("sol", new myTextureMaterialTP2(QString(":/textures/sol.jpg")) );
 
     addMaterial( "phong", new PhongMaterial( QVector4D(0.1f,0.1f,0.1f,1.f),
                                              QVector4D(0.1f,0.9f,0.4f,1.f), 128) );
@@ -71,37 +71,41 @@ void  TestViewer::createSceneEntities()
 
 
 
-    // Lapin jaune, ex test
-    mesh = new Mesh( getGeometry("lapin"), getMaterial("lapinBlanc"), true );
+    // Lapin my phong
+    mesh = new Mesh( getGeometry("lapin"), getMaterial("myphong"), true );
     addEntityInScene("lapinBlanc", mesh );
     mesh->translate(QVector3D(0,1,0));
-    mesh->scale(QVector3D(6.0f,6.0f,6.0f));
+    mesh->scale(QVector3D(3.0f,3.0f,3.0f));
 
 
 
     // Cube grillé
-    mesh = new Mesh( getGeometry("cube"), getMaterial("grid"), true );
-    addEntityInScene("cubeGrid", mesh );
+    //mesh = new Mesh( getGeometry("cube"), getMaterial("grid"), true );
+    //addEntityInScene("cubeGrid", mesh );
 
 
+    // Sol avec texture
+    mesh = new Mesh( getGeometry("sol"), getMaterial("sol"), true);
+    mesh->scale(0.3f);
+    mesh->setFrozen(true);
+    addEntityInScene("solTexture", mesh );
 
 
-
-  // Lapin Phong
+    // Lapin Phong
     mesh = new Mesh( getGeometry("lapin"), getMaterial("phong"), true );
-       addEntityInScene("lapinPhong", mesh );
-       mesh->scale(QVector3D(6.f,6.f,6.f));
+    addEntityInScene("lapinPhong", mesh );
+    mesh->scale(QVector3D(6.f,6.f,6.f));
 
-       m_lights.push_back( PointLight( getCamera()->getPosition() + getCamera()->getRightDir()*4.f, Qt::white ) );
+    m_lights.push_back( PointLight( getCamera()->getPosition() + getCamera()->getRightDir()*4.f, Qt::white ) );
 
-    this->m_cube = new Mesh(this->getGeometry("sol"), this->getMaterial("fbo"));
+    this->m_cube = new Mesh(this->getGeometry("sol"), this->getMaterial("fbo"), true);
 }
 
 
 
 void  TestViewer::animate            ()
 {
-    if(pause != true) {
+    if(!pause) {
         foreach (Mesh * entity, getListEntityInScene() )
         {
             entity->rotateOnSelf( 0.05f, QVector3D(1,1,1) );
@@ -140,24 +144,27 @@ void  TestViewer::drawScene          ()
 // rendu monoscopic
 void TestViewer::drawMono()
 {
-    if(!pause) {
-        // Creation de la vue mono
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //foreach( Mesh * entity, getListEntityInScene() )
-        //{
-        //    entity->render( getCamera(), m_lights );
-        //}
-        this->m_framebuffer->bind();
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        foreach( Mesh * entity, getListEntityInScene() )
-        {
-            entity->render( getCamera(), m_lights );
-        }
-        this->m_framebuffer->release();
-        this->m_cube->render(this->getCamera(), m_lights, this->getMaterial("fbo"));
+    // Creation de la vue mono
+    ///*
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    foreach( Mesh * entity, getListEntityInScene() )
+    {
+        entity->render( getCamera(), m_lights );
     }
+    //*/
+    /*
+    this->m_framebuffer->bind();
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    foreach( Mesh * entity, getListEntityInScene() )
+    {
+        entity->render( getCamera(), m_lights );
+    }
+    this->m_framebuffer->release();
+    this->m_cube->render(this->getCamera(), m_lights, this->getMaterial("fbo"));
+    */
+
 }
 
 
