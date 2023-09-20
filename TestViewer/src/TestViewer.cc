@@ -26,8 +26,8 @@ void TestViewer::resizeGL(int width, int height)
 void  TestViewer::init               ()
 {
     this->m_framebuffer = new FBO(this->width(), this->height(), GL_RGB8);
-    getCamera()->setNearAndFar( 0.01, 100 );
-    getCamera()->setView(QVector3D(0,0.2,4), QVector3D(0,1,0), QVector3D(0,0,0) );
+    getCamera()->setNearAndFar( 0.01f, 100 );
+    getCamera()->setView(QVector3D(0,0.2f,4), QVector3D(0,1,0), QVector3D(0,0,0) );
 
     startAnimation();
 }
@@ -153,7 +153,8 @@ void TestViewer::drawMono()
         entity->render( getCamera(), m_lights );
     }
     //*/
-    /*
+
+    /* TP3 FBO
     this->m_framebuffer->bind();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

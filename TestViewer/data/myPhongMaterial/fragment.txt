@@ -18,12 +18,12 @@ vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos,
     vec3 lightDir = normalize(light - pos);
 	
 	//angle diffusion
-	float diffAngle = dot(lightDir,normal);
-    float lambertian = max(diffAngle, 0.0);
-	diffuse = diffuse * lambertian;
-	//diffuse = diffuse * diffAngle;
+	float diffAngle = dot(normal,lightDir);
+    //float lambertian = max(diffAngle, 0.0);
+	//diffuse = diffuse * lambertian;
+	diffuse = diffuse * diffAngle;
 
-    //Speculaire
+    //Speculaire	
     vec3 reflectDir = normalize(reflect(-lightDir, normal)); //R
     vec3 viewDir = normalize(camPos-pos); //V
 	
@@ -33,6 +33,7 @@ vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos,
 	
 	//lumière ambiante et diffuse
 	vec4 amb_diff = ambiant*lightcol+diffuse*lightcol;
+	//vec4 amb_diff = ambiant+diffuse;
 
     vec4 res = amb_diff+specular;
     return  res;
@@ -45,5 +46,5 @@ void main()
     vec3 light    = lightPos;
     vec4 lightcol = lightColor;
 	vec4 phong = computePhong(light, lightcol, phong_pos, norml, cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse);
-    gl_FragColor = phong * vec4(1., 0., 1., 0.);
+    gl_FragColor = phong;
 }
