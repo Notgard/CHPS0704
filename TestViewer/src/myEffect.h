@@ -13,10 +13,12 @@
 class myEffect : public Effect {
 public:
 
-    myEffect( const QString & shaderPath);
+    myEffect( const QString & shaderPath = "./data/myEffect/" );
     virtual ~myEffect();
 
-    void render(FBO * frameBuffer);
+    void render(int channel, char * buffer_name, FBO * frameBuffer);
+    void setFilter(bool filterOn);
+
 private:
     QString m_shaderPath;
 };

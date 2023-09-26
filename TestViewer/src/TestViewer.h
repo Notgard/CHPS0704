@@ -9,6 +9,7 @@
 #include "QGLShaderViewer.h"
 #include "Mesh.h"
 #include "FBO.h"
+#include "myEffect.h"
 
 
 /// ==============================================================
@@ -43,8 +44,12 @@ protected:
         virtual void drawMono  ();
 private:
         bool pause = false;
+        bool filter = false;
+        bool phong_render = true;
+        bool fbo_render = false;
         Mesh * m_cube;
         FBO * m_framebuffer;
+        myEffect * m_effect;
 };
 
 #endif // TESTVIEWER_H

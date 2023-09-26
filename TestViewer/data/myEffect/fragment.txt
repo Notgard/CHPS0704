@@ -1,0 +1,164 @@
+#version 430
+
+uniform int filterOn;
+uniform sampler2D monFBO;
+uniform vec2 resolution;
+
+in vec2 uv;
+
+vec3 negatif(vec2 uv) {
+	vec3 pixel = texture2D(monFBO, uv).rgb;
+	float red = 1. - pixel.r;
+	float green = 1. - pixel.g;
+	float blue = 1. - pixel.b;
+    pixel = vec3(red, green, blue);
+	return pixel;
+}
+
+vec3 sepia(vec2 uv) {
+	vec3 pixel = texture2D(monFBO, uv).xyz;
+	float red, blue, green;
+	red =  (pixel.x * .393) + (pixel.y *.769) + (pixel.z * .189);
+    blue = (pixel.x * .349) + (pixel.y *.686) + (pixel.z * .168);
+    green = (pixel.x * .272) + (pixel.y *.534) + (pixel.z * .131);
+    pixel = vec3(red, blue, green);
+	return pixel;
+}
+
+vec3 blur_effect(vec2 uv) {
+	vec3 tPixels = vec3(0.0, 0.0, 0.0);
+    float pixels = 0.0;
+    for (float x = -5.; x < 5.; x++) {
+        for (float y = -5.; y < 5.; y++) {
+            vec2 pixelCoord = uv + vec2(x, y) / resolution.xy;
+            vec3 pixelColor = texture2D(monFBO, pixelCoord).xyz;
+            tPixels += pixelColor;
+            pixels += 1.0;
+        }
+    }
+    vec3 avgPixel = tPixels / pixels;
+    return vec3(avgPixel);
+}
+
+/*
+void main()
+{
+	vec2 screen = uv;
+	vec2 scaleCenter = vec2(0.5);
+	float zoom = 0.5;
+
+	vec2 uv1 = vec2(screen.x + 0.25, screen.y - 0.25);
+	vec2 uv2 = vec2(screen-0.25);
+	vec2 uv3 = vec2(screen+0.25);
+	vec2 uv4 = vec2(screen.x - 0.25, screen.y + 0.25);
+	
+
+	vec4 window1 = texture2D(monFBO, (uv1 - scaleCenter) / zoom + scaleCenter);
+	vec4 window2 = texture2D(monFBO, (uv2 - scaleCenter) / zoom + scaleCenter);
+	vec4 window3 = texture2D(monFBO, (uv3 - scaleCenter) / zoom + scaleCenter);
+	vec4 window4 = texture2D(monFBO, (uv4 - scaleCenter) / zoom + scaleCenter);
+
+	gl_FragColor = blur_effect(window1, uv1);
+}
+*/
+
+vec3 checkerboard_filter(vec2 uv) {
+	vec3 pixel = texture2D(monFBO, uv).rgb;
+    float checkerFrequency = 30.;
+    
+    uv -= .5;
+    uv.x *= resolution.x / resolution.y;
+    
+    float xChecker = cos(uv.x * checkerFrequency);
+    float yChecker = sin(uv.y * checkerFrequency);
+    float checkerPattern = xChecker * yChecker;
+
+    vec3 finalColor = vec3(1.);
+    if (checkerPattern > 0.) {
+        finalColor = pixel;
+    }
+    
+    return finalColor;
+}
+
+vec3 emboss_filter(vec2 uv) {
+	vec2 size = 1.0 / textureSize(monFBO, 0);
+    vec3 color = texture2D(monFBO, uv).rgb;
+    
+    vec3 colorTL = texture2D(monFBO, uv - size).rgb;
+    vec3 colorBR = texture2D(monFBO, uv + size).rgb;
+    
+    vec3 gradient = colorTL - colorBR;
+    
+    float luminance = dot(gradient, vec3(0.299, 0.587, 0.114));
+    vec3 embossColor = vec3(0.5) + luminance;
+
+	return embossColor;
+}
+
+void main()
+{
+	vec2 screen = uv;
+	vec4 fbo = texture2D(monFBO, screen);
+	vec3 pixel;
+	screen *= 2.;
+
+	//duplicate objects
+	if (screen.x > 1.) {
+		screen.x = 2. - screen.x;
+	}
+	if(screen.y > 1.) {
+		screen.y = 2. - screen.y;
+	}
+
+	//flip objects
+	if(uv.x > 0.5) {
+		screen.x = 1. - screen.x;
+	}
+	if(uv.y > 0.5) {
+		screen.y = 1 - screen.y;
+	}
+
+	//apply filters
+	if(uv.x < 0.5 && uv.y > 0.5) {
+		pixel = vec4(texture2D(monFBO, screen)).xyz;
+	} else if(uv.x > 0.5 && uv.y > 0.5) {
+		pixel = negatif(screen);
+	} else if(uv.x < 0.5 && uv.y < 0.5) {
+		pixel = sepia(screen);
+	} else if(uv.x > 0.5 && uv.y < 0.5) {
+		pixel = blur_effect(screen);
+	}
+
+	if(filterOn == 1) {
+		gl_FragColor = vec4(pixel, fbo.a);
+	} else if(filterOn == 2) {
+		vec2 sscreen = uv;
+
+		sscreen *= 1.5;
+		
+		sscreen.y -= 0.20;
+
+		if (sscreen.x > 0.75) {
+			sscreen.x = 1.5 - sscreen.x;
+		}
+
+		sscreen.x += 0.10;
+
+		//flip objects
+		if(uv.x > 0.5) {
+			sscreen.x = 1. - sscreen.x;
+		}
+
+		vec3 pix;
+		//apply filters
+		if(uv.x < 0.5 && (uv.y > 0.20 && uv.y < 0.80)) {
+			//pix = vec4(texture2D(monFBO, sscreen)).xyz;
+			pix = emboss_filter(sscreen);
+		} else if(uv.x > 0.5 && (uv.y > 0.20 && uv.y < 0.80)) {
+			pix = checkerboard_filter(sscreen);
+		}
+
+		gl_FragColor = vec4(pix, fbo.a);
+	}
+}

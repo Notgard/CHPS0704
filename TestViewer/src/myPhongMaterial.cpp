@@ -1,10 +1,15 @@
 #include "myPhongMaterial.h"
 #include "Mesh.h"
 
+
 myPhongMaterial::myPhongMaterial(QVector4D const &ambient, QVector4D const &diffuse, float const &f ) {
     this->m_ambiant = ambient;
     this->m_diffuse = diffuse;
     this->m_specpower = f;
+    this->diff_map = new glTexture("./data/Textures/diffuse.jpg");
+    this->specexponent = new glTexture("./data/Textures/specexponent.jpg");
+    this->specstrength = new glTexture("./data/Textures/specstrength.jpg");
+    this->normal_map = new glTexture("./data/Textures/normal.jpg");
     //initialiser les shaders
     initShader(QString("./data/myPhongMaterial/"));
 }
@@ -16,6 +21,27 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
     this->bindSpecific(c);
     this->bindMatrix(c, mesh->getModelMatrix());
 
+    //bind diffuse texture map to channel 0
+    this->gl->glActiveTexture(GL_TEXTURE0);
+    this->diff_map->bind();
+    this->m_program->setUniformValue("diff_map", 0);
+
+    //bind specular exponent texture map to channel 1
+    this->gl->glActiveTexture(GL_TEXTURE1);
+    this->diff_map->bind();
+    this->m_program->setUniformValue("specex_map", 1);
+
+    //bind specular strength texture map to channel 2
+    this->gl->glActiveTexture(GL_TEXTURE2);
+    this->specstrength->bind();
+    this->m_program->setUniformValue("specstr_map", 2);
+
+    //bind the object normal texture map to channel 3
+    this->gl->glActiveTexture(GL_TEXTURE3);
+    this->normal_map->bind();
+    this->m_program->setUniformValue("obj_normal", 3);
+
+    //send the information about the light and phong coefficients to the fragmet shader
     this->m_program->setUniformValue("lightAmbiant", this->getAmbiant());
     this->m_program->setUniformValue("lightDiffuse", this->getDiffuse());
     this->m_program->setUniformValue("lightSpecPow", this->getSpecPower());
@@ -26,8 +52,6 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
         this->m_program->setUniformValue("lightColor", light.getColor());
         this->m_program->setUniformValue("lightPos", light.getPosition());
     }
-    //this->m_program->setUniformValue("lightColor", lights[0].getColor());
-    //this->m_program->setUniformValue("lightPos", lights[0].getPosition());
 
     mesh->getGeometry()->binds(this->attribPos, this->attribNorm, this->attribUvs, this->attribTangents);
     mesh->getGeometry()->draw();
@@ -60,4 +84,20 @@ void         myPhongMaterial::setSpecpower(float getSpecPower) {
 
 void myPhongMaterial::bindSpecific( const QGLCamera *c )  {
     Q_UNUSED(c);
+
+    //glTexture * diff = new glTexture("./data/Textures/diffuse.jpg");
+    //glTexture * specexponent = new glTexture("./data/Textures/specexponent.jpg");
+    //glTexture * specstrength = new glTexture("./data/Textures/specstrength.jpg");
+    //
+    //this->gl->glActiveTexture(GL_TEXTURE0);
+    //diff->bind();
+    //this->m_program->setUniformValue("diff_map", 0);
+    //
+    //this->gl->glActiveTexture(GL_TEXTURE1);
+    //specexponent->bind();
+    //this->m_program->setUniformValue("specex_map", 1);
+    //
+    //this->gl->glActiveTexture(GL_TEXTURE2);
+    //specstrength->bind();
+    //this->m_program->setUniformValue("specstr_map", 2);
 }

@@ -26,6 +26,8 @@ void TestViewer::resizeGL(int width, int height)
 void  TestViewer::init               ()
 {
     this->m_framebuffer = new FBO(this->width(), this->height(), GL_RGB8);
+    this->m_effect = new myEffect();
+    this->m_effect->setFilter(this->filter);
     getCamera()->setNearAndFar( 0.01f, 100 );
     getCamera()->setView(QVector3D(0,0.2f,4), QVector3D(0,1,0), QVector3D(0,0,0) );
 
@@ -33,7 +35,6 @@ void  TestViewer::init               ()
 }
 void  TestViewer::createSceneEntities()
 {
-
     addGeometry( "cube",  new Geometry(":/3d/cube.obj") );
     addGeometry( "lapin", new Geometry(":/3d/Bunny.obj") );
     addGeometry( "sol",   new Geometry(":/3d/sol.obj") );
@@ -41,6 +42,7 @@ void  TestViewer::createSceneEntities()
 
     //Ajout du FBO comme texture à utiliser pour la geométrie
     addMaterial("fbo", new myTextureMaterial(this->m_framebuffer) );
+
     addMaterial( "jaune", new ColorMaterial(QVector4D(1.0f,1.f,0.f,1.0f)) );
     addMaterial( "rouge", new ColorMaterial(Qt::red) );
 
@@ -55,7 +57,7 @@ void  TestViewer::createSceneEntities()
                                              QVector4D(0.1f,0.9f,0.4f,1.f), 128) );
 
     addMaterial( "myphong", new myPhongMaterial( QVector4D(0.1f,0.1f,0.1f,1.f),
-                                             QVector4D(0.1f,0.9f,0.4f,1.f), 128) );
+                                             QVector4D(0.f,0.9f,0.f,1.f), 128) );
 
     addMaterial( "lapinBlanc",    new TextureMaterial(QString(":/textures/bunny2.jpg")) );
     addMaterial( "grid",          new GridMaterial(2, Qt::red, 0.03f ) );
@@ -64,41 +66,59 @@ void  TestViewer::createSceneEntities()
     Mesh *  mesh;
 
     // lapin éclairé
-    mesh = new Mesh( getGeometry("lapin"), getMaterial("blue") );
-    addEntityInScene("LapinJaune", mesh );
-    //mesh->translate(QVector3D(0,0,-2));
-    mesh->translate(QVector3D(0,1,1));
+    //mesh = new Mesh( getGeometry("lapin"), getMaterial("blue") );
+    //addEntityInScene("LapinJaune", mesh );
+    ////mesh->translate(QVector3D(0,0,-2));
+    //mesh->translate(QVector3D(0,1,1));
+
+    if(phong_render) {
+        // Lapin my phong
+        //mesh = new Mesh( getGeometry("lapin"), getMaterial("myphong"), true );
+        //addEntityInScene("lapinBlanc", mesh );
+        //mesh->translate(QVector3D(0,1.5,0));
+        //mesh->scale(QVector3D(6.0f,6.0f,6.0f));
+        //mesh->setFrozen(true);
+
+        //cube my phong
+        mesh = new Mesh( getGeometry("cube"), getMaterial("myphong"), true );
+        addEntityInScene("cubePhong", mesh );
+        mesh->setFrozen(true);
+
+        // Lapin Phong
+        //mesh = new Mesh( getGeometry("lapin"), getMaterial("phong"), true );
+        //addEntityInScene("lapinPhong", mesh );
+        //mesh->scale(QVector3D(6.f,6.f,6.f));
+        //mesh->setFrozen(true);
+
+        // Sol avec texture
+        mesh = new Mesh( getGeometry("sol"), getMaterial("sol"), true);
+        mesh->scale(0.3f);
+        mesh->setFrozen(true);
+        addEntityInScene("solTexture", mesh );
+    } else {
+        // Lapin blanc
+        mesh = new Mesh( getGeometry("lapin"), getMaterial("lapinBlanc"), true );
+        addEntityInScene("lapinBlanc", mesh );
+        mesh->translate(QVector3D(0,1,0));
+        mesh->scale(QVector3D(6.0f,6.0f,6.0f));
+        mesh->setFrozen(true);
+
+        // Cube grillé
+        mesh = new Mesh( getGeometry("cube"), getMaterial("grid"), true );
+        mesh->setFrozen(true);
+        addEntityInScene("cubeGrid", mesh );
 
 
-
-    // Lapin my phong
-    mesh = new Mesh( getGeometry("lapin"), getMaterial("myphong"), true );
-    addEntityInScene("lapinBlanc", mesh );
-    mesh->translate(QVector3D(0,1,0));
-    mesh->scale(QVector3D(3.0f,3.0f,3.0f));
-
-
-
-    // Cube grillé
-    //mesh = new Mesh( getGeometry("cube"), getMaterial("grid"), true );
-    //addEntityInScene("cubeGrid", mesh );
-
-
-    // Sol avec texture
-    mesh = new Mesh( getGeometry("sol"), getMaterial("sol"), true);
-    mesh->scale(0.3f);
-    mesh->setFrozen(true);
-    addEntityInScene("solTexture", mesh );
-
-
-    // Lapin Phong
-    mesh = new Mesh( getGeometry("lapin"), getMaterial("phong"), true );
-    addEntityInScene("lapinPhong", mesh );
-    mesh->scale(QVector3D(6.f,6.f,6.f));
+        // Sol avec texture
+        mesh = new Mesh( getGeometry("sol"), getMaterial("sol"), true);
+        mesh->scale(0.3f);
+        mesh->setFrozen(true);
+        addEntityInScene("solTexture", mesh );
+    }
 
     m_lights.push_back( PointLight( getCamera()->getPosition() + getCamera()->getRightDir()*4.f, Qt::white ) );
 
-    this->m_cube = new Mesh(this->getGeometry("sol"), this->getMaterial("fbo"), true);
+    //this->m_cube = new Mesh(this->getGeometry("cube"), this->getMaterial("fbo"), true);
 }
 
 
@@ -123,10 +143,11 @@ void  TestViewer::drawInformation    ()
     // Affichage du texte 2D
     // ----------------------
     //   coord screen
-    /// TODO - Ajouter l'affichage du texte 2D.
-    ///
-    int y = 0, dy = 30;
-    drawText(10,  (y+=dy), QString(" - truc y(%1), dy(%2)").arg(y).arg(dy), Qt::white, font);
+    QSize curr_size = this->size();
+    drawText(450,  10, QString(" - Size : (%1, %2)").arg(curr_size.width()).arg(curr_size.height()), Qt::yellow, font);
+    drawText(10,  30, QString(" - Press 'L' to enable FBO render"), Qt::green, font);
+    drawText(10,  50, QString(" - Press 'M' to switch the current FBO filter"), Qt::green, font);
+    drawText(10,  70, QString(" - Press 'K' to switch the current scene entities (loading may take some time...)"), Qt::green, font);
 }
 
 
@@ -138,34 +159,29 @@ void  TestViewer::drawScene          ()
 }
 
 
-
-
-
 // rendu monoscopic
 void TestViewer::drawMono()
 {
     // Creation de la vue mono
-    ///*
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    foreach( Mesh * entity, getListEntityInScene() )
-    {
-        entity->render( getCamera(), m_lights );
+    if(!fbo_render) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        foreach( Mesh * entity, getListEntityInScene() )
+        {
+            entity->render( getCamera(), m_lights );
+        }
+    } else {//TP3 FBO
+        this->m_framebuffer->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        foreach( Mesh * entity, getListEntityInScene() )
+        {
+            entity->render( getCamera(), m_lights );
+        }
+        this->m_framebuffer->release();
+        this->m_effect->render(0, "monFBO", this->m_framebuffer);
+        //this->m_cube->render(this->getCamera(), m_lights, this->getMaterial("fbo"));
     }
-    //*/
-
-    /* TP3 FBO
-    this->m_framebuffer->bind();
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    foreach( Mesh * entity, getListEntityInScene() )
-    {
-        entity->render( getCamera(), m_lights );
-    }
-    this->m_framebuffer->release();
-    this->m_cube->render(this->getCamera(), m_lights, this->getMaterial("fbo"));
-    */
-
 }
 
 
@@ -173,8 +189,29 @@ void  TestViewer::keyPressEvent     (QKeyEvent * event)
 {
     switch( event->key() )
     {
-        case Qt::Key_L : qDebug() << " Vous avez taper la touche L"; break;
-        case Qt::Key_P: pause = pause ? false : true;
+        case Qt::Key_L :
+        fbo_render = fbo_render ? false : true;
+        break;
+        case Qt::Key_P: pause = pause ? false : true; break;
+        case Qt::Key_M:
+        filter = filter ? false : true;
+        qDebug() << filter;
+        this->m_effect->setFilter(filter);
+        break;
+        case Qt::Key_K:
+
+        if(phong_render) {
+            removeEntityFromScene("cubePhong");
+            removeEntityFromScene("solTexture");
+        } else {
+            removeEntityFromScene("lapinBlanc");
+            removeEntityFromScene("cubeGrid");
+            removeEntityFromScene("solTexture");
+        }
+
+        phong_render = phong_render ? false : true;
+        createSceneEntities();
+        break;
         default: QGLShaderViewer::keyPressEvent(event); break;
     }
 

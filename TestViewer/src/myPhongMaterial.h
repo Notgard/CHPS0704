@@ -8,6 +8,9 @@
 #include <QVector3D>
 #include <QVector4D>
 #include <QColor>
+
+#include "glTexture.h"
+
 class myPhongMaterial : public Material {
 public:
     myPhongMaterial(QVector4D const &ambient, QVector4D const &diffuse, float const &f );
@@ -28,6 +31,10 @@ private:
     QVector4D m_ambiant;
     QVector4D m_diffuse;
     float     m_specpower;
+    glTexture * diff_map;
+    glTexture * specexponent;
+    glTexture * specstrength;
+    glTexture * normal_map;
 };
 
 #endif // MYPHONGMATERIAL_H

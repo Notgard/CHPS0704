@@ -9,9 +9,23 @@ uniform mat4 proj;
 
 out vec3 phong_pos;
 out vec3 phong_norm;
+out vec2 textureCoordV;
+out mat3 norm_matrix;
 
 void main() {
-	phong_pos = vec3(pos);
-	phong_norm = vec3(norm);
+	//get position based on the model of the object
+	phong_pos = vec3(model * vec4(pos, 1.0));
+
+	//get the normal matrix from the model
+	mat3 normal_matrix = mat3(transpose(inverse(model)));
+	
+	norm_matrix = normal_matrix;
+
+	phong_norm = vec3(normal_matrix * norm);
+	
+	//phong_pos = vec3(pos);
+	//phong_norm = vec3(norm);
+
+	textureCoordV = vec2(uvs.xy);
 	gl_Position = proj * view * model * vec4(pos, 1.0);
 }
