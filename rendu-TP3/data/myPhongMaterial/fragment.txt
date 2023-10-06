@@ -1,0 +1,116 @@
+#version 430
+
+uniform sampler2D diff_map;
+uniform sampler2D specex_map;
+uniform sampler2D specstr_map;
+uniform sampler2D obj_normal;
+
+uniform vec4 lightAmbiant;
+uniform vec4 lightDiffuse;
+uniform float lightSpecPow;
+uniform vec3 cameraPosition;
+uniform vec4 lightColor;
+uniform vec3 lightPos;
+
+uniform int textureMapping = 1; //si on modifie le modele de reflection phong pour qu'il utilise le texture mapping
+
+in vec3 phong_pos;
+in vec3 phong_norm;
+in vec2 textureCoordV;
+in mat3 norm_matrix;
+
+in vec3 tangent;
+in vec3 binormal;
+
+//fonction qui calcule les différents paramètres du modèle de refléction de la lumière Phong
+vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos, float specPower, vec4 ambiant, vec4 diffuse, vec4 specStrength, vec4 specExponent)
+{
+    vec3 normal = normalize(norm);
+
+    //Ambiante
+    //Ka * Ia (ambiant coeff * ambiant color)
+    //ambiant = ambiant * vec4(0.1, 0.1, 0.1, 1.);
+
+    //Diffuse
+    vec3 lightDir = normalize(light - pos);
+	
+	//angle diffusion
+	float diffAngle = dot(normal,lightDir); //(N.L)
+    float lambertian = max(diffAngle, 0.0); //max((N.L), 0.0)
+	diffuse.rgb *= lambertian; //multiplication en conservant l'alpha original
+	//diffuse = diffuse * diffAngle;
+
+    //Speculaire	
+    vec3 reflectDir = normalize(reflect(-lightDir, normal)); //R
+    vec3 viewDir = normalize(camPos-pos); //V
+	
+	//max(V . R, 0)^specPower
+    float specAngle = max(dot(reflectDir, viewDir), 0.0);
+    float specular = pow(specAngle, specPower);
+
+    //Ks(specstrength) * Is(lightcol) * max(V . R, 0)^specPower
+    vec4 specular_val;
+    if(textureMapping == 1)
+	    specular_val = (128*specExponent) * lightcol * specular;
+
+	//lumière ambiante et diffuse
+	//vec3 amb_diff = ambiant.rgb*lightcol.rgb + diffuse.rgb*lightcol.rgb;
+	//vec4 amb_diff = ambiant+diffuse;
+
+    vec4 res;
+    if(textureMapping == 1)
+        res = (ambiant*lightcol + diffuse*lightcol) + specStrength * specular_val;
+    else
+        res = (ambiant*lightcol + diffuse*lightcol) + specular;
+    return  res;
+}
+
+
+void main()
+{
+    vec3 norml;
+
+    vec4 diff_tex_coeff = texture2D(diff_map, textureCoordV);
+    
+    vec4 spec_exponent = texture2D(specex_map, textureCoordV);
+    vec4 spec_strength = texture2D(specstr_map, textureCoordV);
+
+    vec4 texture_normal = texture2D(obj_normal, textureCoordV);
+
+    //map the objects normal to a texture
+    if(textureMapping == 1) {
+	//norml = normalize(vec3(norm_matrix * texture_normal.rgb));
+        //norml = normalize(norm_matrix * vec3(texture_normal.rgb * 2.0 - 1.0));
+
+	norml = normalize(vec3(texture_normal.rgb * 2.0 - 1.0)); //utiliser directement la normale de la texture
+	
+	//ne marche pas
+	//vec3 n = normalize(vec3(texture_normal.rgb * 2.0 - 1.0));
+	//mat3 tbn = mat3(tangent, binormal, normalize(phong_norm));
+	//norml = normalize(tbn * n);
+    } else {
+        norml = normalize(phong_norm);
+    }
+
+    vec3 light    = lightPos;
+    vec4 lightcol = lightColor;
+
+    /* sans le texture mapping
+    vec4 phong = computePhong(light, 
+    lightcol, 
+    phong_pos, 
+    norml, 
+    cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse, 0, 0);
+    */
+    
+    vec4 phong = computePhong(
+    light, 
+    lightcol, 
+    phong_pos,
+    norml, 
+    cameraPosition, lightSpecPow, lightAmbiant, 
+    diff_tex_coeff, spec_strength, spec_exponent
+    );
+
+    gl_FragColor = vec4(phong);
+}
