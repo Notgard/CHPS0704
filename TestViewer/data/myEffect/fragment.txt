@@ -6,71 +6,62 @@ uniform vec2 resolution;
 
 in vec2 uv;
 
+//fonction qui invertie les couleurs de la texture représetant le FBO fournit
 vec3 negatif(vec2 uv) {
 	vec3 pixel = texture2D(monFBO, uv).rgb;
 	float red = 1. - pixel.r;
 	float green = 1. - pixel.g;
 	float blue = 1. - pixel.b;
-    pixel = vec3(red, green, blue);
+    	pixel = vec3(red, green, blue);
 	return pixel;
 }
 
+//fonction qui modifide les couleurs rgb avec les coefficients du filtre sepia de la texture représetant le FBO fournit
 vec3 sepia(vec2 uv) {
-	vec3 pixel = texture2D(monFBO, uv).xyz;
+	vec3 pixel = texture2D(monFBO, uv).rgb;
 	float red, blue, green;
 	red =  (pixel.x * .393) + (pixel.y *.769) + (pixel.z * .189);
-    blue = (pixel.x * .349) + (pixel.y *.686) + (pixel.z * .168);
-    green = (pixel.x * .272) + (pixel.y *.534) + (pixel.z * .131);
-    pixel = vec3(red, blue, green);
+    	blue = (pixel.x * .349) + (pixel.y *.686) + (pixel.z * .168);
+    	green = (pixel.x * .272) + (pixel.y *.534) + (pixel.z * .131);
+    	pixel = vec3(red, blue, green);
 	return pixel;
 }
 
+//fonction qui rend la texture du FBO flou à partir des 25 voisins autour de chaque pixel
 vec3 blur_effect(vec2 uv) {
-	vec3 tPixels = vec3(0.0, 0.0, 0.0);
+    //somme des couleurs des pixels voisins
+    vec3 tPixels = vec3(0.0, 0.0, 0.0);
+    //somme du nombre de pixels parcourue
     float pixels = 0.0;
+    //parcour des 25 voisins autour du pixel actuel
     for (float x = -5.; x < 5.; x++) {
         for (float y = -5.; y < 5.; y++) {
+            //coorddonnées du pixel voisin, dans [0;1] par rapport à la resolution
             vec2 pixelCoord = uv + vec2(x, y) / resolution.xy;
+	    //couleur du pixel voisin depuis le FBO
             vec3 pixelColor = texture2D(monFBO, pixelCoord).xyz;
             tPixels += pixelColor;
             pixels += 1.0;
         }
     }
+    //moyenne de la somme des couleurs des pixels voisins par le nombre pixels parcourue
     vec3 avgPixel = tPixels / pixels;
     return vec3(avgPixel);
 }
 
-/*
-void main()
-{
-	vec2 screen = uv;
-	vec2 scaleCenter = vec2(0.5);
-	float zoom = 0.5;
-
-	vec2 uv1 = vec2(screen.x + 0.25, screen.y - 0.25);
-	vec2 uv2 = vec2(screen-0.25);
-	vec2 uv3 = vec2(screen+0.25);
-	vec2 uv4 = vec2(screen.x - 0.25, screen.y + 0.25);
-	
-
-	vec4 window1 = texture2D(monFBO, (uv1 - scaleCenter) / zoom + scaleCenter);
-	vec4 window2 = texture2D(monFBO, (uv2 - scaleCenter) / zoom + scaleCenter);
-	vec4 window3 = texture2D(monFBO, (uv3 - scaleCenter) / zoom + scaleCenter);
-	vec4 window4 = texture2D(monFBO, (uv4 - scaleCenter) / zoom + scaleCenter);
-
-	gl_FragColor = blur_effect(window1, uv1);
-}
-*/
-
+//filtre qui réslise un filtre échiquier
 vec3 checkerboard_filter(vec2 uv) {
-	vec3 pixel = texture2D(monFBO, uv).rgb;
+    vec3 pixel = texture2D(monFBO, uv).rgb;
     float checkerFrequency = 30.;
     
-    uv -= .5;
-    uv.x *= resolution.x / resolution.y;
+    uv -= .5; //centre les coordonnées
+    uv.x *= resolution.x / resolution.y; //corrige l'abssice par le ratio de la resolution de l'écran
     
+    //cos sur l'abssice en modifiant l'ondulation par une multiplication de la frequence pour controller le nombre de case
     float xChecker = cos(uv.x * checkerFrequency);
+    //sin sur l'ordonnée en modifiant l'ondulation de la courbe par la frequence
     float yChecker = sin(uv.y * checkerFrequency);
+    //combination des deux pour construire les coordonées d'une case de l'échiquier blanche
     float checkerPattern = xChecker * yChecker;
 
     vec3 finalColor = vec3(1.);
@@ -82,18 +73,23 @@ vec3 checkerboard_filter(vec2 uv) {
 }
 
 vec3 emboss_filter(vec2 uv) {
-	vec2 size = 1.0 / textureSize(monFBO, 0);
+    //calcule de la taille de l'échantillon
+    vec2 size = 1.0 / textureSize(monFBO, 0);
+    
     vec3 color = texture2D(monFBO, uv).rgb;
-    
+    //recupere la couleur du BFO en haut à gauche de uv
     vec3 colorTL = texture2D(monFBO, uv - size).rgb;
+    //recupere la couleur du BFO en bas à droite de uv
     vec3 colorBR = texture2D(monFBO, uv + size).rgb;
-    
+    //calcule du gradient avec la soustraction des couleurs en haut à gauche et en bas à droite
     vec3 gradient = colorTL - colorBR;
     
+    //calcule de la luminance avec des coefficients RGB trouvés sur internet
     float luminance = dot(gradient, vec3(0.299, 0.587, 0.114));
+    //ajout de 0.5 à la luminance
     vec3 embossColor = vec3(0.5) + luminance;
 
-	return embossColor;
+    return embossColor;
 }
 
 void main()
@@ -101,9 +97,9 @@ void main()
 	vec2 screen = uv;
 	vec4 fbo = texture2D(monFBO, screen);
 	vec3 pixel;
-	screen *= 2.;
+	screen *= 2.;// multiplication des objets en réduisant le zoom actuel
 
-	//duplicate objects
+	//afficher les objets dupliqués sur les quatres parties de l'écran
 	if (screen.x > 1.) {
 		screen.x = 2. - screen.x;
 	}
@@ -111,7 +107,7 @@ void main()
 		screen.y = 2. - screen.y;
 	}
 
-	//flip objects
+	//retourner les objets correctements
 	if(uv.x > 0.5) {
 		screen.x = 1. - screen.x;
 	}
@@ -119,7 +115,7 @@ void main()
 		screen.y = 1 - screen.y;
 	}
 
-	//apply filters
+	//applications de filtres
 	if(uv.x < 0.5 && uv.y > 0.5) {
 		pixel = vec4(texture2D(monFBO, screen)).xyz;
 	} else if(uv.x > 0.5 && uv.y > 0.5) {
@@ -130,9 +126,9 @@ void main()
 		pixel = blur_effect(screen);
 	}
 
-	if(filterOn == 1) {
+	if(filterOn == 1) {//si les filtres FBO sont activés depuis l'application QT
 		gl_FragColor = vec4(pixel, fbo.a);
-	} else if(filterOn == 2) {
+	} else if(filterOn == 2) {//si les filtres FBO sont activés et que l'on change de filtres à afficher
 		vec2 sscreen = uv;
 
 		sscreen *= 1.5;
@@ -145,13 +141,13 @@ void main()
 
 		sscreen.x += 0.10;
 
-		//flip objects
+		//dupliquer l'objet uniquement sur l'abssice
 		if(uv.x > 0.5) {
 			sscreen.x = 1. - sscreen.x;
 		}
 
 		vec3 pix;
-		//apply filters
+		//appliquer les filtres echiquier et emboss
 		if(uv.x < 0.5 && (uv.y > 0.20 && uv.y < 0.80)) {
 			//pix = vec4(texture2D(monFBO, sscreen)).xyz;
 			pix = emboss_filter(sscreen);

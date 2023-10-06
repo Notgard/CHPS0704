@@ -31,10 +31,10 @@ private:
     QVector4D m_ambiant;
     QVector4D m_diffuse;
     float     m_specpower;
-    glTexture * diff_map;
-    glTexture * specexponent;
-    glTexture * specstrength;
-    glTexture * normal_map;
+    glTexture * diff_map; //la texture contenant les coefficients de diffusion du modèle phong
+    glTexture * specexponent; //la texture contenant l'exponant du speculaire du modèle phong
+    glTexture * specstrength; //la texture contenant la puissance du speculaire du modèle phong
+    glTexture * normal_map; //la texture contenant la normale de l'objet dans le modèle phong
 };
 
 #endif // MYPHONGMATERIAL_H

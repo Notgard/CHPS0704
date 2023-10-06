@@ -6,6 +6,7 @@ myPhongMaterial::myPhongMaterial(QVector4D const &ambient, QVector4D const &diff
     this->m_ambiant = ambient;
     this->m_diffuse = diffuse;
     this->m_specpower = f;
+    //créer les différentes textures contenant les coefficient du modèle phong à envoyer au fragment shader
     this->diff_map = new glTexture("./data/Textures/diffuse.jpg");
     this->specexponent = new glTexture("./data/Textures/specexponent.jpg");
     this->specstrength = new glTexture("./data/Textures/specstrength.jpg");
@@ -45,9 +46,11 @@ void myPhongMaterial::render(const Mesh * mesh, const QGLCamera *c, const QList<
     this->m_program->setUniformValue("lightAmbiant", this->getAmbiant());
     this->m_program->setUniformValue("lightDiffuse", this->getDiffuse());
     this->m_program->setUniformValue("lightSpecPow", this->getSpecPower());
-
+    //ajouter la position de la camera dans le fragment shader
     this->m_program->setUniformValue("cameraPosition", c->getPosition());
 
+    //ajouter la couleur et la position de chaque lumière dans la scène (une par une). 
+    //Le shader ne gène pour le moment que pour une seult source de lumière
     for(const PointLight &light : lights) {
         this->m_program->setUniformValue("lightColor", light.getColor());
         this->m_program->setUniformValue("lightPos", light.getPosition());
@@ -84,20 +87,4 @@ void         myPhongMaterial::setSpecpower(float getSpecPower) {
 
 void myPhongMaterial::bindSpecific( const QGLCamera *c )  {
     Q_UNUSED(c);
-
-    //glTexture * diff = new glTexture("./data/Textures/diffuse.jpg");
-    //glTexture * specexponent = new glTexture("./data/Textures/specexponent.jpg");
-    //glTexture * specstrength = new glTexture("./data/Textures/specstrength.jpg");
-    //
-    //this->gl->glActiveTexture(GL_TEXTURE0);
-    //diff->bind();
-    //this->m_program->setUniformValue("diff_map", 0);
-    //
-    //this->gl->glActiveTexture(GL_TEXTURE1);
-    //specexponent->bind();
-    //this->m_program->setUniformValue("specex_map", 1);
-    //
-    //this->gl->glActiveTexture(GL_TEXTURE2);
-    //specstrength->bind();
-    //this->m_program->setUniformValue("specstr_map", 2);
 }

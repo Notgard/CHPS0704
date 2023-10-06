@@ -8,5 +8,6 @@ uniform mat4 view;
 uniform mat4 proj;
 
 void main() {
+	//position de chaque vertex par rapport à la matrice model, vue et projection
 	gl_Position = proj * view * model * vec4(pos, 1.0);
 }

@@ -43,13 +43,13 @@ protected:
 // test pour mon 1er TP et faciliter les tests
         virtual void drawMono  ();
 private:
-        bool pause = false;
-        bool filter = false;
-        bool phong_render = true;
-        bool fbo_render = false;
+        bool pause = false; //booléan pour effectuer la pause du rendu de la scène
+        bool filter = false; //booléan pour effectuer le rendu de la scène dans le FBO avec les effets shaders
+        bool phong_render = true; //booléan pour changer les objets dans la scène actuelle
+        bool fbo_render = false; //booléan pour activer/désactiver le mode de rendu avec FBO
         Mesh * m_cube;
-        FBO * m_framebuffer;
-        myEffect * m_effect;
+        FBO * m_framebuffer; //le Frame Buffer Object
+        myEffect * m_effect; //l'instance de la classe myEffect pour faire les filtres avec le FBO
 };
 
 #endif // TESTVIEWER_H

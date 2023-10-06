@@ -12,7 +12,7 @@ uniform vec3 cameraPosition;
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 
-uniform int textureMapping = 1;
+uniform int textureMapping = 1; //si on modifie le modele de reflection phong pour qu'il utilise le texture mapping
 
 in vec3 phong_pos;
 in vec3 phong_norm;
@@ -22,6 +22,7 @@ in mat3 norm_matrix;
 in vec3 tangent;
 in vec3 binormal;
 
+//fonction qui calcule les différents paramètres du modèle de refléction de la lumière Phong
 vec4 computePhong(  vec3 light, vec4 lightcol, vec3 pos, vec3 norm, vec3 camPos, float specPower, vec4 ambiant, vec4 diffuse, vec4 specStrength, vec4 specExponent)
 {
     vec3 normal = normalize(norm);
@@ -78,10 +79,12 @@ void main()
 
     //map the objects normal to a texture
     if(textureMapping == 1) {
-        //norml = normalize(phong_norm);
 	//norml = normalize(vec3(norm_matrix * texture_normal.rgb));
         //norml = normalize(norm_matrix * vec3(texture_normal.rgb * 2.0 - 1.0));
-	norml = normalize(vec3(texture_normal.rgb * 2.0 - 1.0));
+
+	norml = normalize(vec3(texture_normal.rgb * 2.0 - 1.0)); //utiliser directement la normale de la texture
+	
+	//ne marche pas
 	//vec3 n = normalize(vec3(texture_normal.rgb * 2.0 - 1.0));
 	//mat3 tbn = mat3(tangent, binormal, normalize(phong_norm));
 	//norml = normalize(tbn * n);
@@ -92,11 +95,14 @@ void main()
     vec3 light    = lightPos;
     vec4 lightcol = lightColor;
 
-	//vec4 phong = computePhong(light, 
-    //lightcol, 
-    //phong_pos, 
-    //norml, 
-    //cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse);
+    /* sans le texture mapping
+    vec4 phong = computePhong(light, 
+    lightcol, 
+    phong_pos, 
+    norml, 
+    cameraPosition, lightSpecPow, lightAmbiant, lightDiffuse, 0, 0);
+    */
+    
     vec4 phong = computePhong(
     light, 
     lightcol, 
@@ -105,5 +111,6 @@ void main()
     cameraPosition, lightSpecPow, lightAmbiant, 
     diff_tex_coeff, spec_strength, spec_exponent
     );
+
     gl_FragColor = vec4(phong);
 }
